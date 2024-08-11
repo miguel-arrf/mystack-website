@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics-based Backend API Hero</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Orbitron', sans-serif;
+            background-color: #292A2F;
+            color: #35E14C;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .hero {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content {
+            text-align: center;
+            z-index: 10;
+        }
+
+        /* h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px #0F0;
+        }
+
+        p {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            color: #0F0;
+        } */
+
+        button {
+            background-color: #000;
+            border: 2px solid #0F0;
+            color: #0F0;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-shadow: 0 0 5px #0F0;
+            box-shadow: 0 0 10px #0F0;
+        }
+
+        button:hover {
+            background-color: #0F0;
+            color: #000;
+        }
+
+        #matter-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            pointer-events: none;
+        }
+
+        .matter-body {
+            position: absolute;
+            font-size: 1rem;
+            padding: 5px;
+            pointer-events: none;
+            font-family: 'Orbitron', sans-serif;
+            /* text-shadow: 0 0 5px #0F0; */
+        }
+
+        .old-tv-effect,
+        .crt-lines,
+        .flicker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .old-tv-effect {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+        }
+
+        .crt-lines {
+            background: repeating-linear-gradient(0deg,
+                    rgba(0, 0, 0, 0.15),
+                    rgba(0, 0, 0, 0.15) 1px,
+                    transparent 1px,
+                    transparent 2px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hero">
+        <div id="matter-container"></div>
+        <div class="content">
+            <h1 id="mainTitle">GIVE ME MY STACK</h1>
+            <p id="subTitle">Choose Your Backend Weapons</p>
+            <button id="cta">DEPLOY NOW</button>
+        </div>
+        <!-- <div class="old-tv-effect"></div>
+        <div class="crt-lines"></div>
+        <div class="flicker"></div> -->
+    </div>
+
+
+    <script>
+        gsap.registerPlugin(TextPlugin);
+
+        // const backendApis = [
+        //     'Express.js', 'Django', 'Ruby on Rails', 'Spring Boot', 'Laravel', 'ASP.NET Core', 'Flask', 'Phoenix',
+        //     'Nest.js', 'FastAPI', 'Koa', 'Symfony', 'Gin', 'Rocket', 'Fiber', 'Ktor', 'Axon', 'Meteor', 'Sails.js',
+        //     'Hapi', 'Feathers', 'LoopBack', 'Strapi', 'AdonisJS', 'Moleculer', 'Actix', 'Vapor', 'Play Framework',
+        //     'Micronaut', 'Quarkus', 'Vert.x', 'Dropwizard', 'Javalin', 'Slim', 'CakePHP', 'CodeIgniter', 'Yii',
+        //     'Zend', 'Phalcon', 'FuelPHP', 'Sinatra', 'Hanami', 'Roda', 'Cuba', 'Tornado', 'Pyramid', 'Bottle',
+        //     'Dash', 'FastifyJS', 'Goji', 'Echo', 'Revel', 'Iris', 'Buffalo', 'Gorilla', 'Chi'
+        // ];
+
+        const backendApis = [
+            'Express.js', 'Django', 'Ruby on Rails', 'Laravel', 'Flask', 'FastAPI', 'Vapor', 'Swift'
+        ];
+
+        const { Engine, Render, Runner, World, Bodies, Mouse, MouseConstraint, Events, Body, Vector, Query } = Matter;
+
+        const engine = Engine.create();
+        const world = engine.world;
+
+        const render = Render.create({
+            element: document.getElementById('matter-container'),
+            engine: engine,
+            options: {
+                width: window.innerWidth,
+                height: window.innerHeight,
+                wireframes: false,
+                background: 'transparent'
+            }
+        });
+
+        const wallOptions = {
+            isStatic: true,
+            render: { visible: true }
+        };
+
+        World.add(world, [
+            Bodies.rectangle(window.innerWidth / 2, window.innerHeight - 5, window.innerWidth, 40, wallOptions),
+            Bodies.rectangle(0, window.innerHeight / 2, 40, window.innerHeight, wallOptions),
+            Bodies.rectangle(window.innerWidth, window.innerHeight / 2, 40, window.innerHeight, wallOptions),
+            Bodies.rectangle(window.innerWidth / 2, 0, window.innerWidth, 40, wallOptions),
+        ]);
+
+        const runner = Runner.create();
+
+        // Create mouse constraint
+        const mouseConstraint = MouseConstraint.create(engine, {});
+
+        // Add mouse constraint to the world
+        World.add(world, mouseConstraint);
+
+        // Keep the mouse in sync with rendering
+
+        // Run the renderer and runner
+        Render.run(render);
+        Runner.run(runner, engine);
+
+        const textColors = ["#F878AE", "#B47AF1", "#FCFCFC", "#72C3B3", "#43B0D0"];
+        const bodies = [];
+
+
+
+
+        function createApiItem(text) {
+            const randomTextColor = textColors[Math.floor(Math.random() * textColors.length)];
+            const div = document.createElement('div');
+            div.className = 'matter-body';
+            div.textContent = text;
+            div.style.color = randomTextColor;
+            document.body.appendChild(div);
+
+            const width = div.offsetWidth;
+            const height = div.offsetHeight;
+
+            var randomX = Math.floor(Math.random() * window.innerWidth);
+            if (randomX < 200) {
+                randomX = 200;
+            } else if (randomX > window.innerWidth - 200) {
+                randomX = window.innerWidth - 200;
+            }
+
+            const body = Bodies.rectangle(randomX, 40, width, height, {
+                render: { visible: false }
+            });
+
+            body.domElement = div;
+            bodies.push(body);
+            World.add(world, body);
+
+            div.style.position = 'absolute';
+            div.style.left = '0';
+            div.style.top = '0';
+            div.style.transform = `translate(${randomX}px, ${40}px)`;
+        }
+
+        for (let i = 0; i < 100; i++) {
+            const randomApi = backendApis[Math.floor(Math.random() * backendApis.length)];
+            createApiItem(randomApi);
+        }
+
+        function updateDOMElements() {
+            bodies.forEach((body) => {
+                const domElement = body.domElement;
+                if (domElement) {
+                    const elementWidth = domElement.offsetWidth;
+                    const elementHeight = domElement.offsetHeight;
+
+                    domElement.style.transform = `translate(${body.position.x - elementWidth / 2}px, ${body.position.y - elementHeight / 2}px) rotate(${body.angle}rad)`;
+
+                    if (body.position.y > window.innerHeight + 100) {
+                        World.remove(world, body);
+                        domElement.remove();
+                        bodies.splice(bodies.indexOf(body), 1);
+                    }
+                }
+            });
+
+            requestAnimationFrame(updateDOMElements);
+        }
+
+
+
+        // Mouse move event to repel bodies
+        Events.on(mouseConstraint, 'mousemove', function (event) {
+            console.log("mouse moving!!")
+            const mousePosition = event.mouse.position;
+            const repelStrength = 0.1;
+            const repelRange = 200;
+
+            bodies.forEach(body => {
+                const force = Vector.sub(body.position, mousePosition);
+                const distance = Vector.magnitude(force);
+
+                if (distance < repelRange) {
+                    const normalizedForce = Vector.normalise(force);
+                    const strength = repelStrength * (1 - distance / repelRange);
+                    Body.applyForce(body, body.position, Vector.mult(normalizedForce, strength));
+                }
+            });
+        });
+
+        updateDOMElements();
+
+        function glitchText(element) {
+            const originalText = element.textContent;
+            const glitchChars = '!<>-_\\/[]{}—=+*^?#________';
+
+            return gsap.to(element, {
+                duration: 0.1,
+                text: {
+                    value: () => {
+                        return originalText.split('').map(char =>
+                            Math.random() > 0.9 ? glitchChars[Math.floor(Math.random() * glitchChars.length)] : char
+                        ).join('');
+                    },
+                },
+                repeat: -1,
+                repeatRefresh: true,
+            });
+        }
+
+        // gsap.from('#mainTitle', { duration: 1, y: -50, opacity: 0, ease: 'power3.out', onComplete: () => glitchText(document.getElementById('mainTitle')) });
+        gsap.from('#subTitle', { duration: 1, y: 50, opacity: 0, ease: 'power3.out', delay: 0.3 });
+        gsap.from('#cta', { duration: 1, scale: 0, opacity: 0, ease: 'back.out(1.7)', delay: 0.6 });
+
+        document.getElementById('cta').addEventListener('mouseenter', () => {
+            gsap.to('#cta', { duration: 0.3, scale: 1.1, ease: 'power1.out', color: '#000', backgroundColor: '#0F0' });
+        });
+
+        document.getElementById('cta').addEventListener('mouseleave', () => {
+            gsap.to('#cta', { duration: 0.3, scale: 1, ease: 'power1.out', color: '#0F0', backgroundColor: '#000' });
+        });
+    </script>
+
+</body>
+
+</html>
