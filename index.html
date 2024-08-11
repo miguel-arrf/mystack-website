@@ -44,6 +44,17 @@
             background-size: contain;
             background-repeat: no-repeat;
             transform: translate(-50%, -50%);
+            opacity: 0;
+            /* Hide cursor initially */
+            transition: opacity 0.3s ease;
+            /* Smooth transition for showing/hiding */
+        }
+
+        /* Hide default cursor on desktop */
+        @media (pointer: fine) {
+            body {
+                cursor: none;
+            }
         }
 
         .hero {
@@ -161,23 +172,48 @@
         let engine, render, runner, world, mouseConstraint;
         const bodies = [];
 
+
         function initCustomCursor() {
             const cursor = document.getElementById('custom-cursor');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-            document.addEventListener('mousemove', (e) => {
-                cursor.style.left = e.clientX + 'px';
-                cursor.style.top = e.clientY + 'px';
-            });
+            if (!isMobile) {
+                // Desktop behavior
+                document.addEventListener('mousemove', (e) => {
+                    cursor.style.opacity = '1';
+                    cursor.style.left = e.clientX + 'px';
+                    cursor.style.top = e.clientY + 'px';
+                });
 
-            // Optional: Change cursor appearance on clickable elements
-            document.querySelectorAll('button, a').forEach(elem => {
-                elem.addEventListener('mouseenter', () => {
-                    cursor.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                // Optional: Change cursor appearance on clickable elements
+                document.querySelectorAll('button, a').forEach(elem => {
+                    elem.addEventListener('mouseenter', () => {
+                        cursor.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                    });
+                    elem.addEventListener('mouseleave', () => {
+                        cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                    });
                 });
-                elem.addEventListener('mouseleave', () => {
-                    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+            } else {
+                // Mobile behavior
+                document.addEventListener('touchstart', (e) => {
+                    cursor.style.opacity = '1';
+                    updateCursorPosition(e.touches[0]);
                 });
-            });
+
+                document.addEventListener('touchmove', (e) => {
+                    updateCursorPosition(e.touches[0]);
+                });
+
+                document.addEventListener('touchend', () => {
+                    cursor.style.opacity = '0';
+                });
+            }
+
+            function updateCursorPosition(touch) {
+                cursor.style.left = touch.clientX + 'px';
+                cursor.style.top = touch.clientY + 'px';
+            }
         }
 
         function init() {
