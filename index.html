@@ -28,6 +28,22 @@
             color: #35E14C;
             overflow: hidden;
             height: 100vh;
+            cursor: none;
+
+        }
+
+        #custom-cursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            width: 64px;
+            /* Adjust size as needed */
+            height: 64px;
+            /* Adjust size as needed */
+            background-image: url('./biggerDuck.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            transform: translate(-50%, -50%);
         }
 
         .hero {
@@ -119,6 +135,7 @@
 </head>
 
 <body>
+    <div id="custom-cursor"></div>
     <div class="hero">
         <div id="matter-container"></div>
         <div class="content">
@@ -135,102 +152,116 @@
     <script>
         gsap.registerPlugin(TextPlugin);
 
-        // const backendApis = [
-        //     'Express.js', 'Django', 'Ruby on Rails', 'Spring Boot', 'Laravel', 'ASP.NET Core', 'Flask', 'Phoenix',
-        //     'Nest.js', 'FastAPI', 'Koa', 'Symfony', 'Gin', 'Rocket', 'Fiber', 'Ktor', 'Axon', 'Meteor', 'Sails.js',
-        //     'Hapi', 'Feathers', 'LoopBack', 'Strapi', 'AdonisJS', 'Moleculer', 'Actix', 'Vapor', 'Play Framework',
-        //     'Micronaut', 'Quarkus', 'Vert.x', 'Dropwizard', 'Javalin', 'Slim', 'CakePHP', 'CodeIgniter', 'Yii',
-        //     'Zend', 'Phalcon', 'FuelPHP', 'Sinatra', 'Hanami', 'Roda', 'Cuba', 'Tornado', 'Pyramid', 'Bottle',
-        //     'Dash', 'FastifyJS', 'Goji', 'Echo', 'Revel', 'Iris', 'Buffalo', 'Gorilla', 'Chi'
-        // ];
-
         const backendApis = [
             'Express.js', 'Django', 'Ruby on Rails', 'Laravel', 'Flask', 'FastAPI', 'Vapor', 'Swift'
         ];
 
         const { Engine, Render, Runner, World, Bodies, Mouse, MouseConstraint, Events, Body, Vector, Query } = Matter;
 
-        const engine = Engine.create();
-        const world = engine.world;
-
-        const render = Render.create({
-            element: document.getElementById('matter-container'),
-            engine: engine,
-            options: {
-                width: window.innerWidth,
-                height: window.innerHeight,
-                wireframes: false,
-                background: 'transparent'
-            }
-        });
-
-        const wallOptions = {
-            isStatic: true,
-            render: { visible: true }
-        };
-
-        World.add(world, [
-            Bodies.rectangle(window.innerWidth / 2, window.innerHeight - 5, window.innerWidth, 40, wallOptions),
-            Bodies.rectangle(0, window.innerHeight / 2, 40, window.innerHeight, wallOptions),
-            Bodies.rectangle(window.innerWidth, window.innerHeight / 2, 40, window.innerHeight, wallOptions),
-            Bodies.rectangle(window.innerWidth / 2, 0, window.innerWidth, 40, wallOptions),
-        ]);
-
-        const runner = Runner.create();
-
-        // Create mouse constraint
-        const mouseConstraint = MouseConstraint.create(engine, {});
-
-        // Add mouse constraint to the world
-        World.add(world, mouseConstraint);
-
-        // Keep the mouse in sync with rendering
-
-        // Run the renderer and runner
-        Render.run(render);
-        Runner.run(runner, engine);
-
-        const textColors = ["#F878AE", "#B47AF1", "#FCFCFC", "#72C3B3", "#43B0D0"];
+        let engine, render, runner, world, mouseConstraint;
         const bodies = [];
 
+        function initCustomCursor() {
+            const cursor = document.getElementById('custom-cursor');
 
-
-
-        function createApiItem(text) {
-            const randomTextColor = textColors[Math.floor(Math.random() * textColors.length)];
-            const div = document.createElement('div');
-            div.className = 'matter-body';
-            div.textContent = text;
-            div.style.color = randomTextColor;
-            document.body.appendChild(div);
-
-            const width = div.offsetWidth;
-            const height = div.offsetHeight;
-
-            var randomX = Math.floor(Math.random() * window.innerWidth);
-            if (randomX < 200) {
-                randomX = 200;
-            } else if (randomX > window.innerWidth - 200) {
-                randomX = window.innerWidth - 200;
-            }
-
-            const body = Bodies.rectangle(randomX, 40, width, height, {
-                render: { visible: false }
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
             });
 
-            body.domElement = div;
-            bodies.push(body);
-            World.add(world, body);
-
-            div.style.position = 'absolute';
-            div.style.left = '0';
-            div.style.top = '0';
-            div.style.transform = `translate(${randomX}px, ${40}px)`;
+            // Optional: Change cursor appearance on clickable elements
+            document.querySelectorAll('button, a').forEach(elem => {
+                elem.addEventListener('mouseenter', () => {
+                    cursor.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                });
+                elem.addEventListener('mouseleave', () => {
+                    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+                });
+            });
         }
 
-        for (let i = 0; i < 100; i++) {
-            const randomApi = backendApis[Math.floor(Math.random() * backendApis.length)];
-            createApiItem(randomApi);
+        function init() {
+            initCustomCursor();
+            engine = Engine.create();
+            world = engine.world;
+
+            render = Render.create({
+                element: document.getElementById('matter-container'),
+                engine: engine,
+                options: {
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    wireframes: false,
+                    background: 'transparent'
+                }
+            });
+
+            runner = Runner.create();
+
+            createWalls();
+            createMouseConstraint();
+
+            Render.run(render);
+            Runner.run(runner, engine);
+
+            createApiItems();
+            updateDOMElements();
+
+            Events.on(mouseConstraint, 'mousemove', handleMouseMove);
+
+            window.addEventListener('resize', handleResize);
+        }
+
+        function createWalls() {
+            const wallOptions = {
+                isStatic: true,
+                render: { visible: true }
+            };
+
+            World.add(world, [
+                Bodies.rectangle(window.innerWidth / 2, window.innerHeight - 5, window.innerWidth, 40, wallOptions),
+                Bodies.rectangle(0, window.innerHeight / 2, 40, window.innerHeight, wallOptions),
+                Bodies.rectangle(window.innerWidth, window.innerHeight / 2, 40, window.innerHeight, wallOptions),
+                Bodies.rectangle(window.innerWidth / 2, 0, window.innerWidth, 40, wallOptions),
+            ]);
+        }
+
+        function createMouseConstraint() {
+            mouseConstraint = MouseConstraint.create(engine, {});
+            World.add(world, mouseConstraint);
+        }
+
+        function createApiItems() {
+            const textColors = ["#F878AE", "#B47AF1", "#FCFCFC", "#72C3B3", "#43B0D0"];
+
+            for (let i = 0; i < 100; i++) {
+                const randomApi = backendApis[Math.floor(Math.random() * backendApis.length)];
+                const randomTextColor = textColors[Math.floor(Math.random() * textColors.length)];
+
+                const div = document.createElement('div');
+                div.className = 'matter-body';
+                div.textContent = randomApi;
+                div.style.color = randomTextColor;
+                document.body.appendChild(div);
+
+                const width = div.offsetWidth;
+                const height = div.offsetHeight;
+
+                var randomX = Math.random() * (window.innerWidth - 400) + 200;
+
+                const body = Bodies.rectangle(randomX, 40, width, height, {
+                    render: { visible: false }
+                });
+
+                body.domElement = div;
+                bodies.push(body);
+                World.add(world, body);
+
+                div.style.position = 'absolute';
+                div.style.left = '0';
+                div.style.top = '0';
+                div.style.transform = `translate(${randomX}px, ${40}px)`;
+            }
         }
 
         function updateDOMElements() {
@@ -253,11 +284,7 @@
             requestAnimationFrame(updateDOMElements);
         }
 
-
-
-        // Mouse move event to repel bodies
-        Events.on(mouseConstraint, 'mousemove', function (event) {
-            console.log("mouse moving!!")
+        function handleMouseMove(event) {
             const mousePosition = event.mouse.position;
             const repelStrength = 0.1;
             const repelRange = 200;
@@ -272,9 +299,25 @@
                     Body.applyForce(body, body.position, Vector.mult(normalizedForce, strength));
                 }
             });
-        });
+        }
 
-        updateDOMElements();
+        function handleResize() {
+            render.canvas.width = window.innerWidth;
+            render.canvas.height = window.innerHeight;
+
+            World.clear(world);
+            Engine.clear(engine);
+            // Removes all matter-body elements
+            document.querySelectorAll('.matter-body').forEach(element => element.remove());
+
+            createWalls();
+            createApiItems();
+
+            // Render.lookAt(render, {
+            //     min: { x: 0, y: 0 },
+            //     max: { x: window.innerWidth, y: window.innerHeight }
+            // });
+        }
 
         function glitchText(element) {
             const originalText = element.textContent;
@@ -294,18 +337,12 @@
             });
         }
 
-        // gsap.from('#mainTitle', { duration: 1, y: -50, opacity: 0, ease: 'power3.out', onComplete: () => glitchText(document.getElementById('mainTitle')) });
+        gsap.from('#mainTitle', { duration: 1, y: -50, opacity: 0, ease: 'power3.out', onComplete: () => glitchText(document.getElementById('mainTitle')) });
         gsap.from('#subTitle', { duration: 1, y: 50, opacity: 0, ease: 'power3.out', delay: 0.3 });
-        // gsap.from('#cta', { duration: 1, scale: 0, opacity: 0, ease: 'back.out(1.7)', delay: 0.6 });
 
-        // document.getElementById('cta').addEventListener('mouseenter', () => {
-        //     gsap.to('#cta', { duration: 0.3, scale: 1.1, ease: 'power1.out', color: '#000', backgroundColor: '#0F0' });
-        // });
-
-        // document.getElementById('cta').addEventListener('mouseleave', () => {
-        //     gsap.to('#cta', { duration: 0.3, scale: 1, ease: 'power1.out', color: '#0F0', backgroundColor: '#000' });
-        // });
+        init();
     </script>
+
 
 </body>
 
