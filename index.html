@@ -124,7 +124,7 @@
         <div class="content">
             <h1 id="mainTitle">GIVE ME MY STACK</h1>
             <p id="subTitle">Choose Your Backend Weapons</p>
-            <button id="cta">DEPLOY NOW</button>
+            <!-- <button id="cta">DEPLOY NOW</button> -->
         </div>
         <!-- <div class="old-tv-effect"></div>
         <div class="crt-lines"></div>
@@ -296,15 +296,15 @@
 
         // gsap.from('#mainTitle', { duration: 1, y: -50, opacity: 0, ease: 'power3.out', onComplete: () => glitchText(document.getElementById('mainTitle')) });
         gsap.from('#subTitle', { duration: 1, y: 50, opacity: 0, ease: 'power3.out', delay: 0.3 });
-        gsap.from('#cta', { duration: 1, scale: 0, opacity: 0, ease: 'back.out(1.7)', delay: 0.6 });
+        // gsap.from('#cta', { duration: 1, scale: 0, opacity: 0, ease: 'back.out(1.7)', delay: 0.6 });
 
-        document.getElementById('cta').addEventListener('mouseenter', () => {
-            gsap.to('#cta', { duration: 0.3, scale: 1.1, ease: 'power1.out', color: '#000', backgroundColor: '#0F0' });
-        });
+        // document.getElementById('cta').addEventListener('mouseenter', () => {
+        //     gsap.to('#cta', { duration: 0.3, scale: 1.1, ease: 'power1.out', color: '#000', backgroundColor: '#0F0' });
+        // });
 
-        document.getElementById('cta').addEventListener('mouseleave', () => {
-            gsap.to('#cta', { duration: 0.3, scale: 1, ease: 'power1.out', color: '#0F0', backgroundColor: '#000' });
-        });
+        // document.getElementById('cta').addEventListener('mouseleave', () => {
+        //     gsap.to('#cta', { duration: 0.3, scale: 1, ease: 'power1.out', color: '#0F0', backgroundColor: '#000' });
+        // });
     </script>
 
 </body>
